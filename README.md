@@ -1,8 +1,11 @@
 ### PJM Load Prediction Toolkit
 
-This project contains everything needed to rebuild load datasets, train per-load-area models, and generate autoregressive daily forecasts with residual projection and peak-day heuristics. All automation lives inside the `docker/` directory so it can run locally or inside the provided Docker image.
+This project contains everything needed to rebuild load datasets, train per-load-area models, and generate autoregressive daily forecasts for the PJM electricity load by 29 areas of disaggregation.
+The main model builds on 29 HistGradientBoosting models trained individually for each region. The final output are projected on the PCA components coming from the residual of the most recent 5 days of load data.
 
-#### Repository layout (key files)
+The models use lagged loads as well as weather forecasts for the 5 main cities within each region of disaggregation.
+
+#### Repository layout
 
 - `Makefile` – defines the main targets (`predictions`, `rawdata`, `trainmodels`, `clean`).
 - `requirements.txt` – pinned versions for pandas, scikit-learn, Meteostat, etc.
@@ -16,7 +19,7 @@ This project contains everything needed to rebuild load datasets, train per-load
 
 Artifacts (`region_models.joblib`, `projection_matrix.joblib`, `november_peak_summary.joblib`, etc.) live under `docker/artifacts/`. Raw and derived data are written to `docker/data/`.
 
-#### Quickstart (Python environment)
+#### Quickstart
 
 ```bash
 cd docker
@@ -68,5 +71,3 @@ The Dockerfile installs requirements and copies the entire project into `/home/j
 - `predict_day.py` feeds corrected predictions back into lag features to forecast multiple days ahead. It also clamps residual-corrected outputs within the November ranges stored in `artifacts/november_peak_summary.joblib`.
 - `make predictions` already depends on `rawdata` and `trainmodels`, so it refreshes inputs and retrains models before forecasting.
 - Pass `--verbose` to any supported script (via `PREDICT_ARGS`, or directly) if you want more runtime detail.
-
-Feel free to extend the Makefile, Docker image, or scripts to fit your deployment workflow.
